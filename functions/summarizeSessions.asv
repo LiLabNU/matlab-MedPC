@@ -1,0 +1,50 @@
+function [Summary_ctrl, Summary_exp] = summarizeSessions(miceInclude, ctrl, exp, Totals, Avg, segmentedSum)
+    % Initialize output structures
+    Summary_ctrl = struct();
+    Summary_exp = struct();
+
+    % Loop through each session
+    for session = 1:size(segmentedSum,1)
+        % Identify control and experimental indices
+        ctrlIdx = ismember(miceInclude(:, session), ctrl);
+        expIdx = ismember(miceInclude(:, session), exp);
+
+        % Assign mice to Summary_ctrl and Summary_exp
+        Summary_ctrl(session).Mice = miceInclude(ctrlIdx, session);
+        Summary_exp(session).Mice = miceInclude(expIdx, session);
+
+        % Add Totals fields to Summary_ctrl and Summary_exp
+        fieldsTotals = fieldnames(Totals);
+        for fd = 1:length(fieldsTotals)
+            field = fieldsTotals{fd};
+            newFieldName = [field, '_Total'];
+            Summary_ctrl(session).(newFieldName) = Totals.(field)(ctrlIdx, session);
+            Summary_exp(session).(newFieldName) = Totals.(field)(expIdx, session);
+        end
+
+        fieldsTotals = fieldnames(Avg.SumBouts);
+        for fd = 1:length(Avg.SumBouts)
+            field = fieldsTotals{fd};
+            newFieldName = [field, '_SumBouts'];  % Append 'SumBouts' to the field name
+            Summary_ctrl(session).(newFieldName) = Avg.SumBouts.(field)(ctrlIdx, session);
+            Summary_exp(session).(newFieldName) = Avg.SumBouts.(field)(expIdx, session);
+        end
+
+        fieldsTotals = fieldnames(Avg.SumFR);
+        for fd = 1:length(Avg.SumFR)
+            field = fieldsTotals{fd};
+            newFieldName = [field, 'SumFR'];  % Append 'SumBouts' to the field name
+            Summary_ctrl(session).(newFieldName) = Avg.SumFR.(field)(ctrlIdx, session);
+            Summary_exp(session).(newFieldName) = Avg.SumFR.(field)(expIdx, session);
+        end
+
+        % Add segmentedSum fields to Summary_ctrl and Summary_exp
+        fieldsSegmented = fieldnames(segmentedSum);
+        for fd = 1:length(fieldsSegmented)
+            field = fieldsSegmented{fd};
+            newFieldName = [field, ' Seg'];
+            Summary_ctrl(session).(newFieldName) = segmentedSum(session).(field)(ctrlIdx, :);
+            Summary_exp(session).(newFieldName) = segmentedSum(session).(field)(expIdx, :);
+        end
+    end
+end
